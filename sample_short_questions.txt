@@ -1,0 +1,1 @@
+["What is Python", "Define OOP", "Explain inheritance", "What is polymorphism", "Define encapsulation", "What is abstraction", "Explain class", "Define object", "What is a method", "Explain constructor"]
