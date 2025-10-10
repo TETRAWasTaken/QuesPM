@@ -1,0 +1,1 @@
+["Explain the concept of Object-Oriented Programming with examples", "Describe the difference between procedural and object-oriented programming", "Discuss the SOLID principles in software design", "Explain exception handling in Python with examples", "Describe the Model-View-Controller (MVC) architecture"]
