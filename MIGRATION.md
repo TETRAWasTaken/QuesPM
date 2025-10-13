@@ -205,9 +205,6 @@ If you were using the old notebook:
 
 ## Backward Compatibility
 
-The old notebook files are preserved in the repository for reference:
-- `QuesPM.ipynb`
-- `QuesPMupdate.ipynb`
-- `Copy_of_QuesPMupdate.ipynb`
+The old notebook files have been removed from the repository as they were legacy/deprecated implementations. The new `quespm.py` is now the only supported version.
 
-However, the new `quespm.py` is the recommended version going forward.
+If you need to reference the old notebook implementations for historical purposes, they can be found in the git history.

@@ -92,8 +92,9 @@ maker.generate_pdf()
 - `quespm.py` - Main Python file with OOP implementation
 - `sample_short_questions.txt` - Example short answer questions
 - `sample_long_questions.txt` - Example long answer questions
+- `example_usage.py` - Example of programmatic usage
+- `test_quespm.py` - Test suite
 - `*.ttf` - Font files for PDF generation (optional)
-- `*.ipynb` - Legacy Jupyter notebook files (deprecated)
 
 ## Classes
 
@@ -115,11 +116,13 @@ The application includes custom exceptions:
 
 ## Legacy Files
 
-The repository contains Jupyter notebook files (`.ipynb`) which are the original implementation. The new `quespm.py` file is the recommended version with:
+The repository previously contained Jupyter notebook files (`.ipynb`) which were the original implementation. These have been removed as they were deprecated. The `quespm.py` file is now the only supported version with:
 - Better code organization
 - Error handling
 - OOP design
 - Improved maintainability
+
+For historical reference, the old notebook files can be found in the git history.
 
 ## Contributing
 
