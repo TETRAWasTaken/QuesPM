@@ -1,0 +1,10 @@
+question,marks,answer
+"What is the keyword used to create a class in Python?",1,"class"
+"Which built-in Python function returns the number of items in an object?",1,"len"
+"What data type is used to represent True or False values?",1,"bool"
+"Name the operator used for floor division in Python.",1,"//"
+"What is the file extension used for Python source code files?",1,".py"
+"Which method is called automatically when a new object is created in Python?",1,"__init__"
+"Name the process of converting an object into a byte stream in Python.",1,"Pickling"
+"Which keyword is used to handle exceptions in Python along with try?",1,"except"
+

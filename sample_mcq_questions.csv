@@ -1,0 +1,10 @@
+question,option_a,option_b,option_c,option_d,marks,correct_answer
+"What is the output of print(type([])) in Python?","<class 'list'>","<class 'tuple'>","<class 'dict'>","<class 'set'>",1,A
+"Which keyword is used to define a function in Python?","func","def","define","function",1,B
+"Which data structure follows the Last-In-First-Out (LIFO) principle?","Queue","Stack","Array","Linked List",1,B
+"What is the time complexity of searching in a balanced binary search tree?","O(n)","O(n^2)","O(log n)","O(1)",1,C
+"Which module in Python is used for regular expressions?","regex","re","regexp","match",1,B
+"Which of the following is an immutable data type in Python?","list","set","tuple","dict",1,C
+"What does SQL stand for?","Structured Query Language","Simple Query Language","Standard Quick Language","System Query Logic",1,A
+"Which algorithm design paradigm does Merge Sort use?","Greedy","Dynamic Programming","Divide and Conquer","Backtracking",1,C
+
