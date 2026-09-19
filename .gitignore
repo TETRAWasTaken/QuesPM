@@ -42,3 +42,5 @@ test_*.pdf
 # OS files
 .DS_Store
 Thumbs.db
+
+Papers/
