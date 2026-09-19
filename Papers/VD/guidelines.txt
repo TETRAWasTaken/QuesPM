@@ -1,7 +1,0 @@
-TEST GUIDELINES
-● Total Marks: 30
-● Total Questions: 15
-● Each question carries 2 marks:
-  ○ 1 mark for selecting the correct MCQ answer
-  ○ 1 mark for explaining/reasoning why the selected answer is correct
-● Time: As specified by the Vehicle Dynamics Department
