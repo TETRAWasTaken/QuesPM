@@ -1,9 +1,0 @@
-question,option_a,option_b,option_c,option_d,lines,marks,correct_answer
-"Which data structure is most suitable for implementing a priority queue efficiently?","Array","Linked List","Binary Heap","Hash Table",2,2,C
-"Why is QuickSort preferred over MergeSort for sorting in-place arrays in memory?","Lower auxiliary space O(1)","Better worst-case time complexity","Stable sorting property","Guaranteed linear time",2,2,A
-"What is the time complexity of searching an element in a balanced Binary Search Tree (AVL tree)?","O(1)","O(log n)","O(n)","O(n log n)",2,2,B
-"Which programming paradigm does Python primarily follow?","Pure Functional","Pure Object-Oriented","Multi-paradigm (Procedural, OOP, Functional)","Logic Programming",2,2,C
-"Why are tuples preferred over lists as dictionary keys in Python?","Tuples use less memory","Tuples are immutable and hashable","Tuples can only store strings","Tuples allow duplicate elements",2,2,B
-"What happens when a process attempts to acquire a lock that is already held in multithreading?","Process terminates immediately","Deadlock always occurs","Thread blocks or spins until released","Operating system crashes",2,2,C
-"In relational databases, what is the primary purpose of B+ trees in indexing?","Minimizes disk I/O with flat wide tree","Enforces foreign key cascades","Encrypts sensitive tabular data","Generates automatic serial primary keys",2,2,A
-"Which TCP mechanism prevents network congestion collapse caused by fast senders?","Flow Control (Sliding Window)","Congestion Control (Slow Start & Congestion Avoidance)","Three-way Handshake","Checksum Verification",2,2,B
