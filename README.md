@@ -6,9 +6,10 @@ A Python-based tool to generate customizable question papers in PDF format with 
 
 - **Multiple Question Types**:
   - **MCQ (Multiple Choice Questions)**: 4 options (A, B, C, D) formatted dynamically in balanced 2-column or 1-column layouts.
+  - **Reasoned MCQ (Reasoning Multiple Choice Questions)**: 4 options (A, B, C, D) plus a designated writing space underneath with a "Reason:" prompt for students to justify their choice.
   - **Objective / One-Word Questions**: Brief questions with clean answer lines (`Ans: ________`).
   - **Subjective Questions**: Short and long answer questions with dedicated light-gray ruled writing lines or blank response spaces.
-- **Section-Based Organization**: Groups questions into dynamically numbered sections (Section A: Multiple Choice Questions, Section B: Objective Questions, Section C: Short Answer Questions, Section D: Long Answer Questions).
+- **Section-Based Organization**: Groups questions into dynamically numbered sections (Section A: Multiple Choice Questions (MCQ), Section B: Reasoned Multiple Choice Questions (Reasoned MCQ), Section C: Objective Questions, Section D: Short Answer Questions, Section E: Long Answer Questions).
 - **Marks System**: Every question displays its allocated marks on the right margin (e.g. `[1 Mark]`, `[5 Marks]`), and total marks are tallied for each section and synchronized with the paper's maximum marks.
 - **CSV Question Bank Support**: Clean CSV templates for easy editing and bulk question loading.
 - **CLI & Interactive Modes**: Run directly with command-line arguments via `argparse` or use the interactive terminal prompt.
@@ -46,7 +47,18 @@ question,option_a,option_b,option_c,option_d,marks,correct_answer
 "Which data structure follows LIFO?","Queue","Stack","Array","Linked List",1,B
 ```
 
-### 2. Objective / One-Word Questions (`sample_objective_questions.csv`)
+### 2. Reasoned Multiple Choice Questions (`sample_reasoned_mcq_questions.csv`)
+Columns: `question,option_a,option_b,option_c,option_d,lines,marks,correct_answer`
+- `lines`: Number of ruled writing lines for reason (default: 2)
+- `marks`: Allocated marks (default: 2.0)
+
+```csv
+question,option_a,option_b,option_c,option_d,lines,marks,correct_answer
+"Which data structure is most suitable for implementing a priority queue efficiently?","Array","Linked List","Binary Heap","Hash Table",2,2,C
+"Why is QuickSort preferred over MergeSort for sorting in-place arrays in memory?","Lower auxiliary space O(1)","Better worst-case time complexity","Stable sorting property","Guaranteed linear time",2,2,A
+```
+
+### 3. Objective / One-Word Questions (`sample_objective_questions.csv`)
 Columns: `question,marks,answer`
 
 ```csv
@@ -104,6 +116,8 @@ python3 quespm.py \
 | `-o`, `--output` | Output PDF file path | `question_paper.pdf` |
 | `--mcq-file` | Path to MCQ questions CSV | None |
 | `--num-mcq` | Number of MCQ questions to pick | All in file |
+| `--reasoned-mcq-file` | Path to Reasoned MCQ questions CSV | None |
+| `--num-reasoned-mcq` | Number of Reasoned MCQ questions to pick | All in file |
 | `--objective-file` | Path to Objective questions CSV | None |
 | `--num-objective` | Number of Objective questions to pick | All in file |
 | `--subjective-file` | Path to Subjective questions CSV | None |

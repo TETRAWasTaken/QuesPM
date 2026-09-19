@@ -18,7 +18,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from quespm import (
     QuestionPaperMaker,
+    MCQ,
+    ReasonedMCQ,
     MCQQuestion,
+    ReasonedMCQQuestion,
     ObjectiveQuestion,
     SubjectiveQuestion
 )
@@ -55,13 +58,12 @@ def main():
     mcq_csv = 'sample_mcq_questions.csv'
     if os.path.exists(mcq_csv):
         mcqs = qm.load_mcq_from_csv(mcq_csv)
-        selected_mcqs = qm.select_random_questions(mcqs, 4)
+        selected_mcqs = qm.select_random_questions(mcqs, 3)
         qm.add_mcq_questions(selected_mcqs)
         print(f"\n✓ Loaded and selected {len(selected_mcqs)} MCQ questions from {mcq_csv}")
     else:
-        # Fallback programmatic creation
         qm.add_mcq_questions([
-            MCQQuestion(
+            MCQ(
                 question="What is the output of print(type([])) in Python?",
                 options=["<class 'list'>", "<class 'tuple'>", "<class 'dict'>", "<class 'set'>"],
                 marks=1.0,
@@ -69,7 +71,25 @@ def main():
             )
         ])
 
-    # 4. Load Objective questions from CSV
+    # 4. Load Reasoned MCQ questions from CSV (or create programmatically)
+    reasoned_mcq_csv = 'sample_reasoned_mcq_questions.csv'
+    if os.path.exists(reasoned_mcq_csv):
+        r_mcqs = qm.load_reasoned_mcq_from_csv(reasoned_mcq_csv)
+        selected_r_mcqs = qm.select_random_questions(r_mcqs, 2)
+        qm.add_reasoned_mcq_questions(selected_r_mcqs)
+        print(f"✓ Loaded and selected {len(selected_r_mcqs)} Reasoned MCQ questions from {reasoned_mcq_csv}")
+    else:
+        qm.add_reasoned_mcq_questions([
+            ReasonedMCQ(
+                question="Why are tuples preferred over lists as dictionary keys in Python?",
+                options=["Tuples use less memory", "Tuples are immutable & hashable", "Tuples can only store strings", "None"],
+                lines=2,
+                marks=2.0,
+                correct_answer="B"
+            )
+        ])
+
+    # 5. Load Objective questions from CSV
     obj_csv = 'sample_objective_questions.csv'
     if os.path.exists(obj_csv):
         objs = qm.load_objective_from_csv(obj_csv)
@@ -77,7 +97,7 @@ def main():
         qm.add_objective_questions(selected_objs)
         print(f"✓ Loaded and selected {len(selected_objs)} Objective questions from {obj_csv}")
 
-    # 5. Load Subjective questions from CSV (with writing lines)
+    # 6. Load Subjective questions from CSV (with writing lines)
     subj_csv = 'sample_subjective_questions.csv'
     if os.path.exists(subj_csv):
         subjs = qm.load_subjective_from_csv(subj_csv)
@@ -88,12 +108,12 @@ def main():
         qm.add_subjective_questions(selected_subjs)
         print(f"✓ Loaded and selected {len(selected_subjs)} Subjective questions from {subj_csv}")
 
-    # 6. Reconcile marks
+    # 7. Reconcile marks
     total_marks = qm.calculate_total_marks()
     maker.config['marks'] = int(total_marks) if total_marks.is_integer() else total_marks
     print(f"\n✓ Calculated total marks from questions: {maker.config['marks']}")
 
-    # 7. Generate PDF
+    # 8. Generate PDF
     print("\nGenerating PDF...")
     success = maker.generate_pdf()
 

@@ -91,6 +91,35 @@ class MCQQuestion:
 
 
 @dataclass
+class ReasonedMCQQuestion:
+    """Represents a Reasoning Multiple Choice Question with 4 options and a writing space for reason."""
+    question: str
+    options: List[str]  # 4 options [A, B, C, D]
+    lines: int = 2      # Small writing space for reason (default: 2 lines)
+    marks: float = 2.0  # Marks for question (default: 2.0)
+    correct_answer: Optional[str] = None
+
+    def __post_init__(self):
+        try:
+            self.marks = float(self.marks)
+        except (ValueError, TypeError):
+            self.marks = 2.0
+        try:
+            self.lines = int(self.lines)
+        except (ValueError, TypeError):
+            self.lines = 2
+        # Ensure 4 options
+        if len(self.options) < 4:
+            while len(self.options) < 4:
+                self.options.append(f"Option {chr(65 + len(self.options))}")
+
+
+# Aliases for explicit and concise naming
+MCQ = MCQQuestion
+ReasonedMCQ = ReasonedMCQQuestion
+
+
+@dataclass
 class ObjectiveQuestion:
     """Represents a basic one-word / short objective question."""
     question: str
@@ -134,6 +163,7 @@ class QuestionManager:
     def __init__(self):
         """Initialize the QuestionManager."""
         self.mcq_questions: List[MCQQuestion] = []
+        self.reasoned_mcq_questions: List[ReasonedMCQQuestion] = []
         self.objective_questions: List[ObjectiveQuestion] = []
         self.subjective_questions: List[SubjectiveQuestion] = []
 
@@ -197,6 +227,63 @@ class QuestionManager:
             if isinstance(e, QuestionError):
                 raise
             raise QuestionError(f"Error loading MCQ questions from {filepath}: {e}")
+
+    def load_reasoned_mcq_from_csv(self, filepath: str) -> List[ReasonedMCQQuestion]:
+        """
+        Load Reasoned MCQ questions from a CSV file.
+        Expected columns: question, option_a, option_b, option_c, option_d, [lines, marks, correct_answer]
+        """
+        if not os.path.exists(filepath):
+            raise QuestionError(f"Reasoned MCQ question file not found: {filepath}")
+
+        questions: List[ReasonedMCQQuestion] = []
+        try:
+            with open(filepath, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f)
+                if not reader.fieldnames:
+                    raise QuestionError(f"Empty or invalid CSV file: {filepath}")
+
+                for row in reader:
+                    cleaned = {k.strip().lower(): v.strip() for k, v in row.items() if k}
+                    q_text = cleaned.get('question') or cleaned.get('q') or cleaned.get('text')
+                    if not q_text:
+                        continue
+
+                    opt_a = cleaned.get('option_a') or cleaned.get('option1') or cleaned.get('a') or cleaned.get('opt_a') or ''
+                    opt_b = cleaned.get('option_b') or cleaned.get('option2') or cleaned.get('b') or cleaned.get('opt_b') or ''
+                    opt_c = cleaned.get('option_c') or cleaned.get('option3') or cleaned.get('c') or cleaned.get('opt_c') or ''
+                    opt_d = cleaned.get('option_d') or cleaned.get('option4') or cleaned.get('d') or cleaned.get('opt_d') or ''
+                    options = [opt_a, opt_b, opt_c, opt_d]
+
+                    raw_lines = cleaned.get('lines') or cleaned.get('writing_space') or cleaned.get('space') or '2'
+                    try:
+                        lines = int(raw_lines)
+                    except ValueError:
+                        lines = 2
+
+                    raw_marks = cleaned.get('marks') or cleaned.get('mark') or cleaned.get('score') or '2'
+                    try:
+                        marks = float(raw_marks)
+                    except ValueError:
+                        marks = 2.0
+
+                    correct = cleaned.get('correct_answer') or cleaned.get('answer') or cleaned.get('correct')
+
+                    questions.append(ReasonedMCQQuestion(
+                        question=q_text,
+                        options=options,
+                        lines=lines,
+                        marks=marks,
+                        correct_answer=correct
+                    ))
+
+            logger.info(f"Loaded {len(questions)} Reasoned MCQ questions from {filepath}")
+            return questions
+
+        except Exception as e:
+            if isinstance(e, QuestionError):
+                raise
+            raise QuestionError(f"Error loading Reasoned MCQ questions from {filepath}: {e}")
 
     def load_objective_from_csv(self, filepath: str) -> List[ObjectiveQuestion]:
         """
@@ -366,6 +453,10 @@ class QuestionManager:
         """Add MCQ questions."""
         self.mcq_questions.extend(questions)
 
+    def add_reasoned_mcq_questions(self, questions: List[ReasonedMCQQuestion]):
+        """Add Reasoned MCQ questions."""
+        self.reasoned_mcq_questions.extend(questions)
+
     def add_objective_questions(self, questions: List[ObjectiveQuestion]):
         """Add Objective / One-Word questions."""
         self.objective_questions.extend(questions)
@@ -401,6 +492,8 @@ class QuestionManager:
         total = 0.0
         for q in self.mcq_questions:
             total += q.marks
+        for q in self.reasoned_mcq_questions:
+            total += q.marks
         for q in self.objective_questions:
             total += q.marks
         for q in self.subjective_questions:
@@ -413,14 +506,21 @@ class QuestionManager:
         """
         sections: List[Tuple[str, List[Any]]] = []
         section_idx = 0
-        letters = ["A", "B", "C", "D", "E"]
+        letters = ["A", "B", "C", "D", "E", "F", "G"]
 
         if self.mcq_questions:
             letter = letters[section_idx]
             section_idx += 1
             sec_marks = sum(q.marks for q in self.mcq_questions)
             marks_str = f"{int(sec_marks)} Marks" if sec_marks.is_integer() else f"{sec_marks:.1f} Marks"
-            sections.append((f"SECTION {letter}: MULTIPLE CHOICE QUESTIONS ({marks_str})", self.mcq_questions))
+            sections.append((f"SECTION {letter}: MULTIPLE CHOICE QUESTIONS (MCQ) ({marks_str})", self.mcq_questions))
+
+        if self.reasoned_mcq_questions:
+            letter = letters[section_idx]
+            section_idx += 1
+            sec_marks = sum(q.marks for q in self.reasoned_mcq_questions)
+            marks_str = f"{int(sec_marks)} Marks" if sec_marks.is_integer() else f"{sec_marks:.1f} Marks"
+            sections.append((f"SECTION {letter}: REASONED MULTIPLE CHOICE QUESTIONS (REASONED MCQ) ({marks_str})", self.reasoned_mcq_questions))
 
         if self.objective_questions:
             letter = letters[section_idx]
@@ -458,6 +558,10 @@ class QuestionManager:
         res: Dict[str, List[Any]] = {}
         if self.mcq_questions:
             res["Multiple Choice Questions"] = self.mcq_questions
+            res["MCQ"] = self.mcq_questions
+        if self.reasoned_mcq_questions:
+            res["Reasoned Multiple Choice Questions"] = self.reasoned_mcq_questions
+            res["Reasoned MCQ"] = self.reasoned_mcq_questions
         if self.objective_questions:
             res["Objective Questions"] = self.objective_questions
 
@@ -687,7 +791,9 @@ class PDFGenerator:
 
             # Draw Questions in this section
             for item in questions:
-                if isinstance(item, MCQQuestion):
+                if isinstance(item, ReasonedMCQQuestion):
+                    self._draw_reasoned_mcq_question(global_q_idx, item)
+                elif isinstance(item, MCQQuestion):
                     self._draw_mcq_question(global_q_idx, item)
                 elif isinstance(item, ObjectiveQuestion):
                     self._draw_objective_question(global_q_idx, item)
@@ -804,6 +910,92 @@ class PDFGenerator:
                 self.current_y -= 2
             self.current_y -= 8
 
+    def _draw_reasoned_mcq_question(self, q_idx: int, r_mcq: ReasonedMCQQuestion):
+        """Draw a Reasoned MCQ question with 4 options and a writing space for reason."""
+        self._draw_question_text_with_marks(q_idx, r_mcq.question, r_mcq.marks)
+
+        opt_labels = ["(A)", "(B)", "(C)", "(D)"]
+        opts = r_mcq.options[:4]
+        while len(opts) < 4:
+            opts.append(f"Option {opt_labels[len(opts)][1]}")
+
+        col_width = (self.right_margin - self.left_margin) / 2
+        max_col_avail_w = col_width - 25
+
+        # Check if all options fit within 2-column layout width
+        fits_2col = all(
+            pdfmetrics.stringWidth(f"{lbl} {opt}", "Helvetica", 10.5) <= max_col_avail_w
+            for lbl, opt in zip(opt_labels, opts)
+        )
+
+        self.canvas.setFont("Helvetica", 10.5)
+        self.canvas.setFillColor(colors.black)
+
+        if fits_2col:
+            # 2-column layout: (A) and (B) on row 1, (C) and (D) on row 2
+            col1_x = self.left_margin + 20
+            col2_x = self.left_margin + col_width + 10
+
+            # Row 1: A and B
+            self._check_page_break(needed_space=20.0)
+            self.canvas.drawString(col1_x, self.current_y, f"(A) {opts[0]}")
+            self.canvas.drawString(col2_x, self.current_y, f"(B) {opts[1]}")
+            self.current_y -= 16
+
+            # Row 2: C and D
+            self._check_page_break(needed_space=20.0)
+            self.canvas.drawString(col1_x, self.current_y, f"(C) {opts[2]}")
+            self.canvas.drawString(col2_x, self.current_y, f"(D) {opts[3]}")
+            self.current_y -= 18
+        else:
+            # 1-column layout: stack all 4 options
+            opt_x = self.left_margin + 20
+            for idx, opt in enumerate(opts):
+                self._check_page_break(needed_space=18.0)
+                full_opt_text = f"{opt_labels[idx]} {opt}"
+                wrapped = self._wrap_text(full_opt_text, "Helvetica", 10.5, (self.right_margin - opt_x))
+                for w_line in wrapped:
+                    self.canvas.drawString(opt_x, self.current_y, w_line)
+                    self.current_y -= 14
+                self.current_y -= 2
+            self.current_y -= 6
+
+        # Draw writing space for reasoning
+        lines_to_draw = max(1, r_mcq.lines)
+        line_spacing = 18.0
+
+        # Draw "Reason:" prompt label
+        self._check_page_break(needed_space=line_spacing + 5.0)
+        self.canvas.setFont("Helvetica-BoldOblique", 9.5)
+        self.canvas.setFillColor(colors.HexColor("#444444"))
+        self.canvas.drawString(self.left_margin + 20, self.current_y, "Reason:")
+
+        if self.ruled_lines:
+            # First line starts next to the "Reason:" label
+            self.canvas.setStrokeColor(colors.HexColor("#C0C0C0"))
+            self.canvas.setLineWidth(0.6)
+            self.canvas.line(self.left_margin + 68, self.current_y - 2, self.right_margin, self.current_y - 2)
+
+            # Subsequent lines span full width from left margin
+            for _ in range(lines_to_draw - 1):
+                self.current_y -= line_spacing
+                self._check_page_break(needed_space=line_spacing)
+                self.canvas.setStrokeColor(colors.HexColor("#C0C0C0"))
+                self.canvas.setLineWidth(0.6)
+                self.canvas.line(self.left_margin + 20, self.current_y, self.right_margin, self.current_y)
+
+            self.canvas.setStrokeColor(colors.black)
+            self.canvas.setLineWidth(1.0)
+            self.canvas.setFillColor(colors.black)
+            self.current_y -= 14
+        else:
+            # Blank space reserved for reasoning
+            for _ in range(lines_to_draw):
+                self._check_page_break(needed_space=line_spacing)
+                self.current_y -= line_spacing
+            self.canvas.setFillColor(colors.black)
+            self.current_y -= 8
+
     def _draw_objective_question(self, q_idx: int, obj_q: ObjectiveQuestion):
         """Draw an objective / one-word question with answer line."""
         self._draw_question_text_with_marks(q_idx, obj_q.question, obj_q.marks)
@@ -876,6 +1068,9 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("--mcq-file", type=str, default=None, help="Path to MCQ questions CSV file")
     parser.add_argument("--num-mcq", type=int, default=None, help="Number of MCQ questions to select")
 
+    parser.add_argument("--reasoned-mcq-file", type=str, default=None, help="Path to Reasoned MCQ questions CSV file")
+    parser.add_argument("--num-reasoned-mcq", type=int, default=None, help="Number of Reasoned MCQ questions to select")
+
     parser.add_argument("--objective-file", type=str, default=None, help="Path to Objective / One-Word questions CSV file")
     parser.add_argument("--num-objective", type=int, default=None, help="Number of Objective questions to select")
 
@@ -906,6 +1101,7 @@ class QuestionPaperMaker:
             return True
         # If any question files are provided via CLI, run non-interactively
         if (self.cli_args.mcq_file or
+            self.cli_args.reasoned_mcq_file or
             self.cli_args.objective_file or
             self.cli_args.subjective_file):
             return False
@@ -1010,7 +1206,16 @@ class QuestionPaperMaker:
             print(Fore.GREEN + f"✓ Selected {len(selected)} MCQ questions from {self.cli_args.mcq_file}")
             has_questions = True
 
-        # 2. Objective
+        # 2. Reasoned MCQ
+        if self.cli_args.reasoned_mcq_file:
+            r_mcqs = self.question_manager.load_reasoned_mcq_from_csv(self.cli_args.reasoned_mcq_file)
+            count = self.cli_args.num_reasoned_mcq if self.cli_args.num_reasoned_mcq is not None else len(r_mcqs)
+            selected = self.question_manager.select_random_questions(r_mcqs, count)
+            self.question_manager.add_reasoned_mcq_questions(selected)
+            print(Fore.GREEN + f"✓ Selected {len(selected)} Reasoned MCQ questions from {self.cli_args.reasoned_mcq_file}")
+            has_questions = True
+
+        # 3. Objective
         if self.cli_args.objective_file:
             objs = self.question_manager.load_objective_from_csv(self.cli_args.objective_file)
             count = self.cli_args.num_objective if self.cli_args.num_objective is not None else len(objs)
@@ -1019,7 +1224,7 @@ class QuestionPaperMaker:
             print(Fore.GREEN + f"✓ Selected {len(selected)} Objective questions from {self.cli_args.objective_file}")
             has_questions = True
 
-        # 3. Subjective
+        # 4. Subjective
         if self.cli_args.subjective_file:
             subjs = self.question_manager.load_subjective_from_csv(self.cli_args.subjective_file)
             count = self.cli_args.num_subjective if self.cli_args.num_subjective is not None else len(subjs)
@@ -1036,31 +1241,36 @@ class QuestionPaperMaker:
         """
         try:
             print(Fore.GREEN + "Select sections to include:")
-            print(Fore.GREEN + "  1) Multiple Choice Questions (MCQ)")
-            print(Fore.GREEN + "  2) Objective / One-Word Questions")
-            print(Fore.GREEN + "  3) Subjective Questions (with writing spaces)")
-            print(Fore.GREEN + "  4) All Sections (MCQ + Objective + Subjective)")
-            print(Fore.GREEN + "  5) Done adding questions\n")
+            print(Fore.GREEN + "  1) MCQ (Standard 4 Options)")
+            print(Fore.GREEN + "  2) Reasoned MCQ (4 Options + Writing Space for Reason)")
+            print(Fore.GREEN + "  3) Objective / One-Word Questions")
+            print(Fore.GREEN + "  4) Subjective Questions (with writing spaces)")
+            print(Fore.GREEN + "  5) All Sections")
+            print(Fore.GREEN + "  6) Done adding questions\n")
 
             while True:
-                choice = input(Fore.CYAN + "Enter choice (1-4 or 5 when finished): ").strip()
+                choice = input(Fore.CYAN + "Enter choice (1-5 or 6 when finished): ").strip()
                 if choice == '1':
                     self._get_mcq_input()
                 elif choice == '2':
-                    self._get_objective_input()
+                    self._get_reasoned_mcq_input()
                 elif choice == '3':
-                    self._get_subjective_input()
+                    self._get_objective_input()
                 elif choice == '4':
+                    self._get_subjective_input()
+                elif choice == '5':
                     self._get_mcq_input()
+                    self._get_reasoned_mcq_input()
                     self._get_objective_input()
                     self._get_subjective_input()
                     break
-                elif choice in ['5', 'done', 'q']:
+                elif choice in ['6', 'done', 'q']:
                     break
                 else:
-                    print(Fore.YELLOW + "Invalid choice. Please enter 1, 2, 3, 4, or 5.")
+                    print(Fore.YELLOW + "Invalid choice. Please enter 1, 2, 3, 4, 5, or 6.")
 
             total_q = (len(self.question_manager.mcq_questions) +
+                       len(self.question_manager.reasoned_mcq_questions) +
                        len(self.question_manager.objective_questions) +
                        len(self.question_manager.subjective_questions))
 
@@ -1111,6 +1321,43 @@ class QuestionPaperMaker:
                 print(Fore.GREEN + f"✓ Added {len(selected)} MCQ questions\n")
         except Exception as e:
             print(Fore.RED + f"Error adding MCQ questions: {e}")
+
+    def _get_reasoned_mcq_input(self):
+        """Interactive input for Reasoned MCQ questions."""
+        try:
+            print(Fore.MAGENTA + "\n--- Reasoned MCQ (4 Options + Writing Space for Reason) ---")
+            filepath = input(Fore.CYAN + "Enter path to Reasoned MCQ CSV file (or Enter for manual entry): ").strip()
+            if filepath:
+                r_mcqs = self.question_manager.load_reasoned_mcq_from_csv(filepath)
+                count_str = input(Fore.CYAN + f"Enter number of Reasoned MCQs to select (max {len(r_mcqs)}) [default: {len(r_mcqs)}]: ").strip()
+                count = int(count_str) if count_str else len(r_mcqs)
+                selected = self.question_manager.select_random_questions(r_mcqs, count)
+                self.question_manager.add_reasoned_mcq_questions(selected)
+                print(Fore.GREEN + f"✓ Added {len(selected)} Reasoned MCQ questions\n")
+            else:
+                count = int(input(Fore.CYAN + "How many Reasoned MCQ questions would you like to enter? "))
+                selected = []
+                for i in range(count):
+                    print(Fore.MAGENTA + f"\nReasoned MCQ #{i+1}:")
+                    q_text = input(Fore.CYAN + "  Question: ").strip()
+                    opt_a = input(Fore.CYAN + "  Option A: ").strip()
+                    opt_b = input(Fore.CYAN + "  Option B: ").strip()
+                    opt_c = input(Fore.CYAN + "  Option C: ").strip()
+                    opt_d = input(Fore.CYAN + "  Option D: ").strip()
+                    lines_str = input(Fore.CYAN + "  Reasoning lines [default: 2]: ").strip()
+                    lines = int(lines_str) if lines_str else 2
+                    marks_str = input(Fore.CYAN + "  Marks [default: 2]: ").strip()
+                    marks = float(marks_str) if marks_str else 2.0
+                    selected.append(ReasonedMCQQuestion(
+                        question=q_text,
+                        options=[opt_a, opt_b, opt_c, opt_d],
+                        lines=lines,
+                        marks=marks
+                    ))
+                self.question_manager.add_reasoned_mcq_questions(selected)
+                print(Fore.GREEN + f"✓ Added {len(selected)} Reasoned MCQ questions\n")
+        except Exception as e:
+            print(Fore.RED + f"Error adding Reasoned MCQ questions: {e}")
 
     def _get_objective_input(self):
         """Interactive input for Objective / One-Word questions."""
