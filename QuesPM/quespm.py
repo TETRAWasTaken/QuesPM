@@ -691,24 +691,64 @@ class PDFGenerator:
             self.canvas.setFont("Helvetica-Bold", 13 if has_wide_logo else 14)
             self.canvas.drawCentredString(297.5, subtitle_y, subtitle)
 
-            # Subject
+            # Metadata row values
             subject_str = f"Subject: {self.config.get('subject', 'General')}"
-            self.canvas.setFont("Helvetica", 11)
-            self.canvas.drawString(self.left_margin, 725, subject_str)
-
-            # Time and marks
             time_val = self.config.get('time', 'N/A')
             marks_val = self.config.get('marks', 'N/A')
             time_str = f"Time Allowed: {time_val} mins"
             marks_str = f"Maximum Marks: {marks_val}"
 
-            self.canvas.drawRightString(self.right_margin, 725, marks_str)
-            self.canvas.drawString(self.left_margin, 708, time_str)
+            meta_font = "Helvetica"
+            meta_font_bold = "Helvetica-Bold"
+            meta_font_size = 9.5
 
-            # Line separator
+            # Row 1 (y = 724): Candidate Name, PRN, and Maximum Marks
+            self.canvas.setFont(meta_font_bold, meta_font_size)
+            self.canvas.setFillColor(colors.black)
+            self.canvas.drawString(self.left_margin, 724, "Name:")
+            name_label_w = pdfmetrics.stringWidth("Name:", meta_font_bold, meta_font_size)
+            prn_start_x = self.left_margin + 225.0
+
+            # Ruled line for Name
+            self.canvas.setStrokeColor(colors.HexColor("#777777"))
+            self.canvas.setLineWidth(0.7)
+            self.canvas.line(self.left_margin + name_label_w + 4, 724, prn_start_x - 15.0, 724)
+
+            # Optional pre-filled Name
+            candidate_name = self.config.get('candidate_name') or self.config.get('name')
+            if candidate_name:
+                self.canvas.setFont(meta_font, meta_font_size)
+                self.canvas.drawString(self.left_margin + name_label_w + 6, 726, str(candidate_name))
+
+            # PRN Label and space
+            self.canvas.setFont(meta_font_bold, meta_font_size)
+            self.canvas.drawString(prn_start_x, 724, "PRN:")
+            prn_label_w = pdfmetrics.stringWidth("PRN:", meta_font_bold, meta_font_size)
+
+            # Maximum marks on the right
+            self.canvas.setFont(meta_font, meta_font_size)
+            self.canvas.drawRightString(self.right_margin, 724, marks_str)
+            marks_w = pdfmetrics.stringWidth(marks_str, meta_font, meta_font_size)
+
+            # Ruled line for PRN
+            prn_line_end = self.right_margin - marks_w - 20.0
+            self.canvas.line(prn_start_x + prn_label_w + 4, 724, prn_line_end, 724)
+
+            # Optional pre-filled PRN
+            candidate_prn = self.config.get('candidate_prn') or self.config.get('prn')
+            if candidate_prn:
+                self.canvas.setFont(meta_font, meta_font_size)
+                self.canvas.drawString(prn_start_x + prn_label_w + 6, 726, str(candidate_prn))
+
+            # Row 2 (y = 707): Subject on the left, Time Allowed on the right
+            self.canvas.setFont(meta_font, meta_font_size)
+            self.canvas.drawString(self.left_margin, 707, subject_str)
+            self.canvas.drawRightString(self.right_margin, 707, time_str)
+
+            # Header bottom separator line
             self.canvas.setStrokeColor(colors.black)
             self.canvas.setLineWidth(1.2)
-            self.canvas.line(self.left_margin, 698, self.right_margin, 698)
+            self.canvas.line(self.left_margin, 697, self.right_margin, 697)
 
             self.current_y = 675.0
             logger.info("Header drawn successfully")
